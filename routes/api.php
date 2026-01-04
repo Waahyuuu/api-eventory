@@ -175,3 +175,20 @@ Route::get('/transaksi', function () {
             })
     );
 });
+
+Route::get('/barang/{id}/has-transaksi', function ($id) {
+
+    $barang = Barang::find($id);
+
+    if (!$barang) {
+        return response()->json([
+            'message' => 'Barang tidak ditemukan'
+        ], 404);
+    }
+
+    $hasTransaksi = Transaksi::where('barang_id', $id)->exists();
+
+    return response()->json([
+        'has_transaksi' => $hasTransaksi
+    ]);
+});
