@@ -66,13 +66,20 @@ Route::put('/barang/{id}', function (Request $request, $id) {
     $barang = Barang::find($id);
 
     if (!$barang) {
-        return response()->json(['message' => 'Barang yang ingin diubah tidak ditemukan'], 404);
+        return response()->json([
+            'message' => 'Barang yang ingin diubah tidak ditemukan'
+        ], 404);
     }
 
+    $sudahTransaksi = Transaksi::where('barang_id', $barang->id)->exists();
+
     $barang->namaBarang = $request->input('namaBarang');
-    $barang->kategori = $request->input('kategori');
-    $barang->stok = $request->input('stok');
-    $barang->deskripsi = $request->input('deskripsi');
+    $barang->kategori   = $request->input('kategori');
+    $barang->deskripsi  = $request->input('deskripsi');
+
+    if (!$sudahTransaksi && $request->has('stok')) {
+        $barang->stok = $request->input('stok');
+    }
 
     if ($request->hasFile('images')) {
 
@@ -136,13 +143,15 @@ Route::post('/transaksi', function (Request $request) {
     $barang->save();
 
     $transaksi = Transaksi::create([
-        'barang_id' => $barang->id,
-        'qty' => $request->qty,
+        'barang_id'       => $barang->id,
+        'nama_barang'     => $barang->namaBarang,
+        'qty'             => $request->qty,
         'jenis_transaksi' => $request->jenis_transaksi,
-        'stok_sebelum' => $stokSebelum,
-        'stok_sesudah' => $stokSesudah,
-        'catatan' => $request->catatan
+        'stok_sebelum'    => $stokSebelum,
+        'stok_sesudah'    => $stokSesudah,
+        'catatan'         => $request->catatan
     ]);
+
 
     return response()->json($transaksi);
 });
@@ -150,13 +159,12 @@ Route::post('/transaksi', function (Request $request) {
 Route::get('/transaksi', function () {
 
     return response()->json(
-        Transaksi::with('barang')
-            ->orderBy('created_at', 'desc')
+        Transaksi::orderBy('created_at', 'desc')
             ->get()
             ->map(function ($t) {
                 return [
                     'id' => $t->id,
-                    'nama_barang' => $t->barang?->namaBarang ?? 'Barang telah dihapus',
+                    'nama_barang' => $t->nama_barang,
                     'qty' => $t->qty,
                     'jenis_transaksi' => $t->jenis_transaksi,
                     'stok_sebelum' => $t->stok_sebelum,

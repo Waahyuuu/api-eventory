@@ -19,11 +19,13 @@ return new class extends Migration
                 ->constrained('barang')
                 ->nullOnDelete();
 
+            $table->string('nama_barang'); // 🔑 SNAPSHOT AUDIT
+
             $table->integer('qty');
             $table->enum('jenis_transaksi', ['masuk', 'keluar']);
 
-            $table->integer('stok_sebelum')->nullable();
-            $table->integer('stok_sesudah')->nullable();
+            $table->integer('stok_sebelum');
+            $table->integer('stok_sesudah');
 
             $table->text('catatan')->nullable();
             $table->timestamps();
